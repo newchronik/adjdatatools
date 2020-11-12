@@ -17,12 +17,13 @@ class AdjustedScaler():
         with_centering : boolean, True by default
             If True, center the data before scaling
 
-    .. versionadded:: 0.1
+    .. versionadded:: 0.2
     """
 
-    def __init__(self, with_centering=True):
+    def __init__(self, with_centering=True, paired=False):
         self.scaling_parameters = {}
         self.with_centering = with_centering
+        self.paired_columns = paired
 
     @staticmethod
     def _check_data(x):
@@ -49,10 +50,10 @@ class AdjustedScaler():
 
             if mc < 0.0:
                 adjusted_interval = (
-                quantile_1 - 1.5 * math.exp(-3 * mc) * iqr, quantile_3 + 1.5 * math.exp(4 * mc) * iqr)
+                    quantile_1 - 1.5 * math.exp(-3 * mc) * iqr, quantile_3 + 1.5 * math.exp(4 * mc) * iqr)
             else:
                 adjusted_interval = (
-                quantile_1 - 1.5 * math.exp(-4 * mc) * iqr, quantile_3 + 1.5 * math.exp(3 * mc) * iqr)
+                    quantile_1 - 1.5 * math.exp(-4 * mc) * iqr, quantile_3 + 1.5 * math.exp(3 * mc) * iqr)
 
             existing_border_left = x[x[column_name] >= adjusted_interval[0]][column_name].min()
             existing_border_right = x[x[column_name] <= adjusted_interval[1]][column_name].max()
@@ -80,7 +81,45 @@ class AdjustedScaler():
                 'scale_interval': adjusted_scale_value
             }
 
+        self._check_paired_features(self.paired_columns)
+
         return self
+
+    def _check_paired_features(self, paired_columns):
+        """Paired feature processing.
+
+        Parameters
+        ----------
+        paired_columns : tuple, list
+            All paired feature names.
+        """
+
+        if isinstance(paired_columns, tuple):
+            self._process_paired_features(paired_columns)
+        elif isinstance(paired_columns, list):
+            for columns in paired_columns:
+                self._check_paired_features(columns)
+
+    def _process_paired_features(self, paired_columns):
+        """Calculates scaling parameters for paired features.
+
+        Parameters
+        ----------
+        paired_columns : tuple
+            Paired feature names.
+        """
+
+        first_column_name = paired_columns[0]
+        max_scale_interval = self.scaling_parameters[first_column_name]['scale_interval']
+        for i in range(len(paired_columns)):
+            column_name = paired_columns[i]
+            scale_interval = self.scaling_parameters[column_name]['scale_interval']
+            if max_scale_interval < scale_interval:
+                max_scale_interval = scale_interval
+
+        # updating all scale interval values for paired columns
+        for column_name in paired_columns:
+            self.scaling_parameters[column_name]['scale_interval'] = max_scale_interval
 
     def transform(self, x):
         """Center and scale the data.
