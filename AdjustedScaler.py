@@ -17,6 +17,9 @@ class AdjustedScaler():
         with_centering : boolean, True by default
             If True, center the data before scaling
 
+        paired: list, tuple, False by default
+            Paired features names
+
     .. versionadded:: 0.2
     """
 
@@ -91,7 +94,7 @@ class AdjustedScaler():
         Parameters
         ----------
         paired_columns : tuple, list
-            All paired feature names.
+            All paired features names.
         """
 
         if isinstance(paired_columns, tuple):
