@@ -1,4 +1,4 @@
-# AdjustedScaler
+# smart-data-tools
 
 This scaler scales the data to a valid range to eliminate potential 
 outliers. The range of significant values is calculated using the 
