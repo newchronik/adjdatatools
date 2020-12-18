@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='adjdatatools',
-    version='0.3.2',
+    version='0.3.4',
     packages=find_packages(),
     url='https://github.com/newchronik/adjdatatools',
     license='MIT',
