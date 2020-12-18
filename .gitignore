@@ -1,1 +1,4 @@
 .idea
+build/*
+dist/*
+smart_data_tools.egg-info/*
