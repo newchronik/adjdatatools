@@ -1,10 +1,10 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='smart-data-tools',
+    name='adjdatatools',
     version='0.3.1',
     packages=find_packages(),
-    url='https://github.com/newchronik/smart-data-tools',
+    url='https://github.com/newchronik/adjdatatools',
     license='MIT',
     keywords='data preprocessing scaler',
     author='Anton Kvasnitsa',
