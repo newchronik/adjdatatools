@@ -81,9 +81,9 @@ class AdjustedScaler():
             Tuple with borders values
         """
 
-        interval_lenght = 1.0 / intervals_count
-        interval_border_left = 0.0 + interval_number / intervals_count
-        interval_border_right = interval_border_left + interval_lenght
+        items_per_interval = self.max_items / intervals_count
+        interval_border_left = 0 + interval_number * items_per_interval
+        interval_border_right = interval_border_left + items_per_interval
         return (interval_border_left, interval_border_right)
 
     def _get_dataset_sample(self, x, column_name, intervals_count=20):
@@ -107,16 +107,14 @@ class AdjustedScaler():
         """
 
         items_per_interval = self.max_items / intervals_count
-        quantile_left = x[column_name].min()
-        quantile_right = x[column_name].quantile(q=0.05)
-        data_filter = x[column_name] >= quantile_left & x[column_name] < quantile_right
-        data_sample = x[data_filter][[column_name]].sample(items_per_interval)
+        sorted_values = x[[column_name]].sort_values(column_name).reset_index()
+        data_sample = sorted_values.iloc[:items_per_interval].sample(items_per_interval)
         for i in range(1, intervals_count - 1):
             interval_border_left, interval_border_right = self._get_interval_borders(intervals_count, i)
-            quantile_left = x[column_name].quantile(q=interval_border_left)
-            quantile_right = x[column_name].quantile(q=interval_border_right)
-            data_filter = x[column_name] >= quantile_left & x[column_name] < quantile_right
-            new_data_sample = x[data_filter][[column_name]].sample(items_per_interval)
+            # quantile_left = x[column_name].quantile(q=interval_border_left)
+            # quantile_right = x[column_name].quantile(q=interval_border_right)
+            # data_filter = x[column_name] >= quantile_left & x[column_name] < quantile_right
+            new_data_sample = sorted_values.iloc[interval_border_left:interval_border_right].sample(items_per_interval)
             data_sample = data_sample.append(new_data_sample, ignore_index=True)
         return data_sample[column_name]
 
