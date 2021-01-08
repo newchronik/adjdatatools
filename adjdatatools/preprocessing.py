@@ -64,7 +64,7 @@ class AdjustedScaler():
 
         return self.target_columns
 
-    def _get_interval_borders(self, intervals_count, interval_number):
+    def _get_interval_borders(self, items_count, intervals_count, interval_number):
         """Getting interval borders.
 
         Parameters
@@ -81,7 +81,7 @@ class AdjustedScaler():
             Tuple with borders values
         """
 
-        items_per_interval = self.max_items / intervals_count
+        items_per_interval = items_count // intervals_count
         interval_border_left = 0 + interval_number * items_per_interval
         interval_border_right = interval_border_left + items_per_interval
         return (interval_border_left, interval_border_right)
@@ -106,16 +106,16 @@ class AdjustedScaler():
             DataFrame Object Sampling
         """
 
-        items_per_interval = self.max_items / intervals_count
+        items_count = len(x)
+        items_per_interval = items_count // intervals_count
+        samples_per_interval = self.max_items // intervals_count
         sorted_values = x[[column_name]].sort_values(column_name).reset_index()
-        data_sample = sorted_values.iloc[:items_per_interval].sample(items_per_interval)
-        for i in range(1, intervals_count - 1):
-            interval_border_left, interval_border_right = self._get_interval_borders(intervals_count, i)
-            # quantile_left = x[column_name].quantile(q=interval_border_left)
-            # quantile_right = x[column_name].quantile(q=interval_border_right)
-            # data_filter = x[column_name] >= quantile_left & x[column_name] < quantile_right
-            new_data_sample = sorted_values.iloc[interval_border_left:interval_border_right].sample(items_per_interval)
-            data_sample = data_sample.append(new_data_sample, ignore_index=True)
+        data_sample = sorted_values.iloc[:items_per_interval].sample(samples_per_interval)[[column_name]]
+        for i in range(1, intervals_count):
+            interval_border_left, interval_border_right = self._get_interval_borders(items_count, intervals_count, i)
+            new_data_sample = sorted_values.iloc[interval_border_left:interval_border_right].sample(samples_per_interval)[[column_name]]
+            data_sample = data_sample.append(new_data_sample, ignore_index=True)[[column_name]]
+
         return data_sample[column_name]
 
     def fit(self, x):
