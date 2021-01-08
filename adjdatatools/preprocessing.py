@@ -14,24 +14,111 @@ class AdjustedScaler():
 
     Parameters
         ----------
-        with_centering : boolean, True by default
+        with_centering : bool, True by default
             If True, center the data before scaling
+
+        columns: list, tuple, False by default
+            Target features names
 
         paired: list, tuple, False by default
             Paired features names
 
-    .. versionadded:: 0.2
+        with_sampling: bool, True by default
+            If True, used sample from a dataset to solve the problem of memory size limitations
+
+        max_items: int
+            Maximum number of elements for solid processing
+
+    .. versionadded:: 0.4.0
     """
 
-    def __init__(self, with_centering=True, paired=False):
+    def __init__(self, with_centering=True, columns=False, paired=False, with_sampling=True, max_items=5000):
         self.scaling_parameters = {}
         self.with_centering = with_centering
+        self.target_columns = columns
         self.paired_columns = paired
+        self.with_sampling = with_sampling
+        self.max_items = max_items
 
     @staticmethod
     def _check_data(x):
         if not isinstance(x, DataFrame):
             raise ValueError('Invalid type of "x" parameter')
+
+    def _get_target_columns(self, x):
+        """Getting target columns.
+
+        Parameters
+        ----------
+        x : DataFrame
+            Pandas DataFrame Object whose data needs to be converted.
+
+        Returns
+        -------
+        target_columns : enumerate
+            Target column List
+        """
+
+        if not self.target_columns:
+            return x.columns
+
+        return self.target_columns
+
+    def _get_interval_borders(self, intervals_count, interval_number):
+        """Getting interval borders.
+
+        Parameters
+        ----------
+        intervals_count : int
+            Count of intervals.
+
+        interval_number : int
+            Interval number.
+
+        Returns
+        -------
+        borders : tuple
+            Tuple with borders values
+        """
+
+        interval_lenght = 1.0 / intervals_count
+        interval_border_left = 0.0 + interval_number / intervals_count
+        interval_border_right = interval_border_left + interval_lenght
+        return (interval_border_left, interval_border_right)
+
+    def _get_dataset_sample(self, x, column_name, intervals_count=20):
+        """Getting sample of dataset.
+
+        Parameters
+        ----------
+        x : DataFrame
+            Pandas DataFrame Object whose data needs to be converted.
+
+        column_name : str
+            Column name.
+
+        intervals_count : int
+            Count of intervals.
+
+        Returns
+        -------
+        data_sample : DataFrame
+            DataFrame Object Sampling
+        """
+
+        items_per_interval = self.max_items / intervals_count
+        quantile_left = x[column_name].min()
+        quantile_right = x[column_name].quantile(q=0.05)
+        data_filter = x[column_name] >= quantile_left & x[column_name] < quantile_right
+        data_sample = x[data_filter][[column_name]].sample(items_per_interval)
+        for i in range(1, intervals_count - 1):
+            interval_border_left, interval_border_right = self._get_interval_borders(intervals_count, i)
+            quantile_left = x[column_name].quantile(q=interval_border_left)
+            quantile_right = x[column_name].quantile(q=interval_border_right)
+            data_filter = x[column_name] >= quantile_left & x[column_name] < quantile_right
+            new_data_sample = x[data_filter][[column_name]].sample(items_per_interval)
+            data_sample = data_sample.append(new_data_sample, ignore_index=True)
+        return data_sample[column_name]
 
     def fit(self, x):
         """Compute the median and adjusted interval to be used for scaling.
@@ -44,12 +131,16 @@ class AdjustedScaler():
 
         self._check_data(x)
 
-        for column_name in x.columns:
+        for column_name in self._get_target_columns(x):
             median = x[column_name].median()
             quantile_1 = x[column_name].quantile(q=0.25)
             quantile_3 = x[column_name].quantile(q=0.75)
             iqr = quantile_3 - quantile_1
-            mc = self.medcouple(y=x[column_name], axis=0)
+            if len(x.index) > self.max_items:
+                data_for_mc = self._get_dataset_sample(x, column_name)
+            else:
+                data_for_mc = x[column_name]
+            mc = self.medcouple(y=data_for_mc, axis=0)
 
             if mc < 0.0:
                 adjusted_interval = (
@@ -142,7 +233,7 @@ class AdjustedScaler():
 
         x_scaled = x.copy()
 
-        for column_name in x_scaled.columns:
+        for column_name in self._get_target_columns(x_scaled):
             delta = self.scaling_parameters[column_name]['delta']
             scale_interval = self.scaling_parameters[column_name]['scale_interval']
             x_scaled[column_name] = (x_scaled[column_name] - delta) / scale_interval
@@ -167,7 +258,7 @@ class AdjustedScaler():
 
         x = x_scaled.copy()
 
-        for column_name in x.columns:
+        for column_name in self._get_target_columns(x):
             delta = self.scaling_parameters[column_name]['delta']
             scale_interval = self.scaling_parameters[column_name]['scale_interval']
             x[column_name] = x[column_name] * scale_interval + delta

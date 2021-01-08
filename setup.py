@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='adjdatatools',
-    version='0.3.4',
+    version='0.4.0',
     packages=find_packages(),
     url='https://github.com/newchronik/adjdatatools',
     license='MIT',
@@ -12,7 +12,7 @@ setup(
     description='This library contains adjusted tools for data preprocessing and working with mixed data types.',
     install_requires=[
         'numpy',
-        'pandas'
+        'pandas>=0.20.0'
     ],
     include_package_data=True,
 )

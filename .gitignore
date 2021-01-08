@@ -2,3 +2,4 @@
 build/*
 dist/*
 adjdatatools.egg-info/*
+commands
