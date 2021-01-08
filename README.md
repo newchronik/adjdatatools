@@ -26,6 +26,23 @@ For scaling - the .transform() method.
 
 For the reverse transformation - the .inverse_transform() method.
 
+## Parameters
+* <b>with_centering</b> : bool, True by default
+<br>
+If True, center the data before scaling
+* <b>columns</b> : list, tuple, False by default
+<br>
+Target features names
+* <b>paired</b> : list, tuple, False by default
+<br>
+Paired features names
+* <b>with_sampling</b> : bool, True by default
+<br>
+If True, used sample from a dataset to solve the problem of memory size limitations
+* <b>max_items</b> : int
+<br>
+Maximum number of elements for solid processing
+
 ## Using:
 ```
 from adjdatatools.preprocessing import AdjustedScaler

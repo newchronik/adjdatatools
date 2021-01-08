@@ -17,16 +17,16 @@ class AdjustedScaler():
         with_centering : bool, True by default
             If True, center the data before scaling
 
-        columns: list, tuple, False by default
+        columns : list, tuple, False by default
             Target features names
 
-        paired: list, tuple, False by default
+        paired : list, tuple, False by default
             Paired features names
 
-        with_sampling: bool, True by default
+        with_sampling : bool, True by default
             If True, used sample from a dataset to solve the problem of memory size limitations
 
-        max_items: int
+        max_items : int
             Maximum number of elements for solid processing
 
     .. versionadded:: 0.4.0
