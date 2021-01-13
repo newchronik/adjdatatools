@@ -49,5 +49,5 @@ from adjdatatools.preprocessing import AdjustedScaler
 
 new_scaler = AdjustedScaler()
 new_scaler.fit(my_data_frame)
-scaled_data_frame = new_scaler.transform(new_scaler)
+scaled_data_frame = new_scaler.transform(my_data_frame)
 ```
