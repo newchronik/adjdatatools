@@ -30,6 +30,7 @@ For the reverse transformation - the .inverse_transform() method.
 * <b>with_centering</b> : bool, True by default
 <br>
 If True, center the data before scaling
+<br>
 * <b>columns</b> : list, tuple, False by default
 <br>
 Target features names
